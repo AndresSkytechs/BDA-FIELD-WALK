@@ -329,21 +329,27 @@
     var es = lang() === 'es';
     var host = document.createElement('div'); host.className = 'sfw-ov login';
     host.innerHTML = '<div class="sfw-box"><h2>' + (es ? 'Entrar' : 'Sign in') + '</h2>' +
-      '<p>' + (es ? 'Escribe tu PIN. Te lo da la oficina. Se pide una sola vez en este teléfono.' : 'Type your PIN. The office gives it to you. Asked only once on this phone.') + '</p>' +
+      '<p>' + (es ? 'Escribe tu nombre y el PIN de la empresa. Se pide una sola vez en este teléfono.' : 'Type your name and the company PIN. Asked only once on this phone.') + '</p>' +
+      '<input id="sfwName" list="sfwList" autocomplete="off" placeholder="' + (es ? 'Tu nombre' : 'Your name') + '">' +
+      '<datalist id="sfwList">' + roster.map(function (r) { return '<option value="' + String(r[1]).replace(/"/g, '&quot;') + '">'; }).join('') + '</datalist>' +
       '<input id="sfwPin" inputmode="numeric" autocomplete="off" placeholder="PIN">' +
       '<p id="sfwErr" class="sfw-err"></p>' +
       '<button type="button" id="sfwOk">' + (es ? 'Entrar' : 'Sign in') + '</button></div>';
     document.body.appendChild(host);
     var go = function () {
-      var v = (document.getElementById('sfwPin').value || '').trim(); if (!v) return;
+      var v = (document.getElementById('sfwPin').value || '').trim();
+      var typed = (document.getElementById('sfwName').value || '').trim();
       var btn = document.getElementById('sfwOk'), err = document.getElementById('sfwErr');
+      if (!typed) { err.textContent = es ? 'Escribe tu nombre.' : 'Type your name.'; return; }
+      if (!v) { err.textContent = es ? 'Escribe el PIN.' : 'Type the PIN.'; return; }
       btn.disabled = true; err.textContent = es ? 'Comprobando…' : 'Checking…';
       PIN = v;
       api('hello', {}, 20000).then(function (r) {
         if (!r || !r.ok) { PIN = ''; btn.disabled = false; err.textContent = es ? 'PIN incorrecto.' : 'Wrong PIN.'; return; }
         try { localStorage.setItem('sfw_pin', v); } catch (e) {}
-        var hit = roster.filter(function (x) { return String(x[1]).toLowerCase() === String(r.name).toLowerCase(); })[0];
-        ME = { id: hit ? hit[0] : 'tec-' + String(r.name).toLowerCase().replace(/[^a-z0-9]+/g, '-'), name: hit ? hit[1] : r.name };
+        var nm = r.name || typed;   /* PIN general: vale el nombre que escribió el técnico */
+        var hit = roster.filter(function (x) { return String(x[1]).toLowerCase() === String(nm).toLowerCase(); })[0];
+        ME = { id: hit ? hit[0] : 'tec-' + String(nm).toLowerCase().replace(/[^a-z0-9]+/g, '-'), name: hit ? hit[1] : nm };
         try { localStorage.setItem('sfw_me', JSON.stringify(ME)); } catch (e) {}
         host.remove(); meResolve(ME);
         SYNC.pull('global'); SYNC.flush(); SYNC.paint();
