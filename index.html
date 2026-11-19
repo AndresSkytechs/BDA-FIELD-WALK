@@ -255,6 +255,7 @@
       if (this.state === 'off' || !navigator.onLine) { el.textContent = '⚠ ' + (es ? 'Sin conexión' : 'Offline') + (n ? ' · ' + n + (es ? ' por subir' : ' to upload') : ''); el.className = 'sfw-sync off'; }
       else if (n) { el.textContent = '⏳ ' + (es ? 'Subiendo ' : 'Uploading ') + n; el.className = 'sfw-sync up'; }
       else { el.textContent = '☁ ' + (es ? 'Al día' : 'Up to date'); el.className = 'sfw-sync ok'; }
+      el.textContent += ' · ' + APPV;
     }
   };
 
